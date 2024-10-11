@@ -1,10 +1,9 @@
 import { ethers } from 'ethers';
+import contractABI from '../../../../nftProject-truffle/build/contracts/MyNFT.json';
 
 // Your deployed contract address and ABI
-const CONTRACT_ADDRESS = 'YOUR_CONTRACT_ADDRESS';
-const CONTRACT_ABI = [
-  // Add your contract ABI here
-];
+const CONTRACT_ADDRESS = '0xb6538dc5d6c6873fb4a1bec92e5e3031b3d0467d';
+const CONTRACT_ABI = contractABI.abi;  // ABI from the JSON file
 
 export const mintNFT = async (ipfsHash) => {
   const tokenURI = `https://ipfs.io/ipfs/${ipfsHash}`;
