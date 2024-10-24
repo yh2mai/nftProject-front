@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'; // Import necessary components for routing
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import MintNFTForm from './components/mintNFT/MintNFTForm';
+import NftListings from './components/NftListings';
+import NftItem from './components/NftItem';
+import ListNFTForSaleForm from './components/ListNFTForSaleForm'; // Import the new form component
 import { connectMetaMask, fetchNFTsForAccount } from './metamask';
 
 function App() {
@@ -34,45 +37,42 @@ function App() {
                 <nav>
                     <ul>
                         <li>
-                            <Link to="/">Home (NFTs)</Link> {/* Link to home (NFT display) */}
+                            <Link to="/">Home (NFTs)</Link>
                         </li>
                         <li>
-                            <Link to="/mint">Mint NFT</Link> {/* Link to minting page */}
+                            <Link to="/mint">Mint NFT</Link>
+                        </li>
+                        <li>
+                            <Link to="/listings">Listings</Link>
                         </li>
                     </ul>
                 </nav>
 
                 <Routes>
-                    {/* Route for displaying NFTs */}
-                    <Route path="/" element={
-                        !account ? (
-                            <button onClick={connectMetaMask}>Login with MetaMask</button>
-                        ) : (
-                            <div>
-                                <h1>NFTs for Account: {account}</h1>
-                                <div className="nft-list">
-                                    {nfts && nfts.length > 0 ? (
-                                        nfts.map((nft, index) => (
-                                            <div key={index} className="nft-item">
-                                                {/* Check if the image property exists before rendering */}
-                                                {nft.image_url ? (
-                                                    <img src={nft.image_url} alt={`NFT ${index}`} />
-                                                ) : (
-                                                    <p>No image available</p>
-                                                )}
-                                                <p>{nft.name ? nft.name : 'No name available'}</p>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <p>No NFTs found for this account.</p>
-                                    )}
+                    <Route
+                        path="/"
+                        element={
+                            !account ? (
+                                <button onClick={connectMetaMask}>Login with MetaMask</button>
+                            ) : (
+                                <div>
+                                    <h1>NFTs for Account: {account}</h1>
+                                    <div className="nft-list">
+                                        {nfts && nfts.length > 0 ? (
+                                            nfts.map((nft, index) => (
+                                                <NftItem key={index} nft={nft} account={account} />
+                                            ))
+                                        ) : (
+                                            <p>No NFTs found for this account.</p>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        )
-                    } />
-
-                    {/* Route for minting new NFTs */}
+                            )
+                        }
+                    />
                     <Route path="/mint" element={<MintNFTForm account={account} />} />
+                    <Route path="/listings" element={<NftListings />} />
+                    <Route path="/list-for-sale" element={<ListNFTForSaleForm />} /> {/* Route for listing form */}
                 </Routes>
             </div>
         </Router>
