@@ -1,17 +1,35 @@
-import React, { useState } from 'react';
-import { ethers, BrowserProvider, Contract } from 'ethers';
+import React, { useState, useEffect } from 'react';
+import { BrowserProvider, Contract } from 'ethers';
 import axios from 'axios';
-import MyNFTContractABI from './MyNFT.json'; // Update this path if necessary
 
 const MintNFTForm = ({ account }) => {
     const [file, setFile] = useState(null);
     const [nftName, setNftName] = useState('');
     const [status, setStatus] = useState('');
+    const [MyNFTContractABI, setMyNFTContractABI] = useState(null);
+    const [contractAddress, setContractAddress] = useState('');
 
-    // Replace these with your contract address and Pinata API keys
-    const contractAddress = '0xb6538dc5d6c6873fb4a1bec92e5e3031b3d0467d';
     const pinataApiKey = process.env.REACT_APP_PINATA_API_KEY;
     const pinataSecretApiKey = process.env.REACT_APP_PINATA_SECRET_KEY;
+    const GANACHE_NETWORK_ID = process.env.REACT_APP_GANACHE_NETWORK_ID;
+
+    useEffect(() => {
+        async function fetchContractData() {
+            try {
+                const response = await fetch('http://localhost:5000/contract');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok' + response.statusText);
+                }
+                const contractData = await response.json();
+                setMyNFTContractABI(contractData.abi);
+                setContractAddress(contractData.networks[GANACHE_NETWORK_ID].address);
+            } catch (error) {
+                console.error('Failed to fetch contract data:', error);
+            }
+        }
+
+        fetchContractData();
+    }, [GANACHE_NETWORK_ID]);
 
     const handleFileChange = (event) => {
         setFile(event.target.files[0]);
@@ -50,7 +68,7 @@ const MintNFTForm = ({ account }) => {
             setStatus(`Image uploaded to IPFS with hash: ${fileHash}. Now minting NFT...`);
 
             // Step 2: Mint the NFT using ethers.js
-            if (typeof window.ethereum !== 'undefined') {
+            if (typeof window.ethereum !== 'undefined' && MyNFTContractABI && contractAddress) {
                 // Request access to MetaMask
                 await window.ethereum.request({ method: 'eth_requestAccounts' });
 
@@ -59,7 +77,7 @@ const MintNFTForm = ({ account }) => {
                 const signer = await provider.getSigner();
 
                 // Connect to the contract
-                const contract = new Contract(contractAddress, MyNFTContractABI.abi, signer);
+                const contract = new Contract(contractAddress, MyNFTContractABI, signer);
 
                 // Step 3: Call the mint function
                 const mintTx = await contract.mintNFT(account, tokenURI);
@@ -69,7 +87,7 @@ const MintNFTForm = ({ account }) => {
 
                 setStatus(`Minting successful! Transaction Hash: ${mintTx.hash}`);
             } else {
-                setStatus('Ethereum wallet not detected. Please install MetaMask.');
+                setStatus('Ethereum wallet not detected or contract data not loaded. Please install MetaMask.');
             }
         } catch (error) {
             console.error('Minting failed:', error);
@@ -94,7 +112,7 @@ const MintNFTForm = ({ account }) => {
                             <input type="file" onChange={handleFileChange} required />
                         </label>
                     </div>
-                    <button type="submit">Mint NFT</button>
+                    <button type="submit" disabled={!MyNFTContractABI || !contractAddress}>Mint NFT</button>
                 </form>
             ) : (
                 <p>Please connect your MetaMask account to mint an NFT.</p>
